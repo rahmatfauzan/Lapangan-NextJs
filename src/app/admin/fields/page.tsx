@@ -34,11 +34,11 @@ import {
 // ------------------------------------
 
 // --- Import Modal Components ---
-import { FieldEditModal } from "@/components/modal/modal-edit";
-import { FieldDeleteModal } from "@/components/modal/modal-delete";
+import { DeleteModal } from "@/components/modal/modal-delete";
 import { FieldForm } from "./create/field-create-form"; // Ganti nama jika ini form gabungan
 import { FieldHoursForm } from "./fieldHours-edit-form";
 import { FieldBlockForm } from "./field-block-form";
+import { EditModal } from "@/components/modal/modal-edit";
 
 // Definisikan Tab untuk Lapangan
 const fieldFilterTabs: FilterTab[] = [
@@ -189,7 +189,9 @@ export default function FieldsPage() {
       },
     },
   });
-
+  {
+    console.log("table");
+  }
   return (
     <div className="p-4 md:p-6 space-y-4">
       {/* Header Halaman */}
@@ -197,13 +199,13 @@ export default function FieldsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Manajemen Lapangan
         </h1>
+
         <Button asChild>
           <Link href="/admin/fields/create">
             <PlusCircle className="mr-2 h-4 w-4" /> Tambah Lapangan
           </Link>
         </Button>
       </div>
-
       {/* --- Panggil Komponen DataTable "Bodoh" --- */}
       <div className="grid grid-cols-1">
         <DataTable
@@ -214,7 +216,7 @@ export default function FieldsPage() {
           // --- KIRIM SEMUA PROPS FILTER/PAGINASI KE ANAK ---
           paginationMeta={paginatedData?.meta}
           paginationLinks={paginatedData?.links}
-          onPageChange={(newPageIndex) => setPage(newPageIndex + 1)}
+          onPageChange={(newPageIndex) => setPage(newPageIndex)}
           filterValue={filterValue}
           onFilterChange={setFilterValue}
           filterPlaceholder="Filter nama lapangan..."
@@ -225,10 +227,10 @@ export default function FieldsPage() {
       </div>
 
       {/* --- Modal Edit Reusable --- */}
-      <FieldEditModal
+      <EditModal
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        selectedField={selectedField}
+        selected={selectedField}
         tittle="Update Lapangan"
         customDescription="Perbarui detail harga dan status lapangan ini."
       >
@@ -238,39 +240,39 @@ export default function FieldsPage() {
             onSuccess={() => onEditSuccess(selectedField.name)}
           />
         )}
-      </FieldEditModal>
+      </EditModal>
 
       {/* --- Modal Edit Jam Operasional --- */}
-      <FieldEditModal
+      <EditModal
         open={isEditHoursDialogOpen}
         onOpenChange={setIsEditHoursDialogOpen}
-        selectedField={selectedField}
+        selected={selectedField}
         tittle="Atur Jam Operasional"
         customDescription="Perbarui detail jam operasional lapangan ini."
       >
         {selectedField && (
           <FieldHoursForm field={selectedField} onSuccess={onHoursUpdate} />
         )}
-      </FieldEditModal>
+      </EditModal>
 
       {/* --- Modal Blokir Jadwal --- */}
-      <FieldEditModal
+      <EditModal
         open={isBlockFieldDialogOpen}
         onOpenChange={setIsBlockFieldDialogOpen}
-        selectedField={selectedField}
+        selected={selectedField}
         tittle="Blokir Jadwal"
         customDescription="Tutup lapangan pada tanggal dan jam tertentu."
       >
         {selectedField && (
           <FieldBlockForm field={selectedField} onSuccess={onBlock} />
         )}
-      </FieldEditModal>
+      </EditModal>
 
       {/* --- Modal Delete Reusable --- */}
-      <FieldDeleteModal
+      <DeleteModal
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        selectedField={selectedField}
+        selected={selectedField}
         swrKeyPrefix={swrKeyPrefix}
         onConfirm={onConfirmDelete}
         isMutating={isMutating}

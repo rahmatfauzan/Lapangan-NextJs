@@ -51,9 +51,9 @@ const formSchema = z.object({
   reason: z
     .string()
     .min(3, { message: "Alasan wajib diisi (minimal 3 karakter)." }),
-  start_date: z.date().optional(),
+  start_date: z.date().min(1, { message: "Tanggal mulai wajib dipilih." }),
   start_time: z.string().min(1, { message: "Jam mulai wajib dipilih." }),
-  end_date: z.date().optional(),
+  end_date: z.date().min(1, { message: "Tanggal selesai wajib dipilih." }),
   end_time: z.string().min(1, { message: "Jam selesai wajib dipilih." }),
 });
 // ------------------------------------

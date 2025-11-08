@@ -1,9 +1,21 @@
+// app/admin/users/columns-user.tsx (File Baru)
+
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Edit, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  Edit,
+  MoreHorizontal,
+  Trash2,
+  Mail,
+  Phone,
+  Calendar,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,21 +24,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import type { Field } from "@/types"; 
+import type { User } from "@/types";
+import { format } from "date-fns";
 
-// Helper (kamu bisa pindah ini ke lib/utils.ts)
-const formatRupiah = (number: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(number);
-};
+interface CreateUserColumnsProps {
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
+}
 
-// Ini adalah definisi kolom kamu
-export const columns: ColumnDef<Field>[] = [
+export const createUsersColumns = ({
+  onEdit,
+  onDelete,
+}: CreateUserColumnsProps): ColumnDef<User>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -49,96 +58,93 @@ export const columns: ColumnDef<Field>[] = [
     enableSorting: false,
     enableHiding: false,
   },
+
+  // 1. Kolom Nama & Avatar
   {
-    accessorKey: "name", // Kunci dari data API
-    header: ({ column }) => {
+    accessorKey: "name",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Nama Pengguna
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const user = row.original;
+      const fallback = user.name.substring(0, 2).toUpperCase();
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nama Lapangan
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback>{fallback}</AvatarFallback>
+          </Avatar>
+          <div className="font-medium">{user.name}</div>
+        </div>
       );
     },
-    cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
   },
+
+  // 2. Kolom Kontak
   {
-    // Gunakan accessorFn untuk data nested (object)
-    id: "sport_category",
-    accessorFn: (row) => row.sport_category.name, // Ambil nama kategori
-    header: "Kategori",
+    id: "contact",
+    header: "Kontak",
     cell: ({ row }) => (
-      <div>{row.original.sport_category.name}</div>
+      <div className="text-sm space-y-1">
+        <p className="flex items-center gap-1 text-muted-foreground">
+          <Mail className="h-3 w-3" /> {row.original.email}
+        </p>
+        <p className="flex items-center gap-1 text-muted-foreground">
+          <Phone className="h-3 w-3" /> {row.original.phone || "N/A"}
+        </p>
+      </div>
     ),
+    enableSorting: false,
   },
+
+  // 3. Kolom Peran (Role)
   {
-    accessorKey: "status",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <Badge variant={row.getValue("status") === "active" ? "default" : "secondary"}>
-        {row.getValue("status")}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "price_weekday",
-    header: () => <div className="text-right">Harga Weekday</div>,
+    id: "role",
+    accessorFn: (row) => row.roles[0] ?? "user", // Asumsi satu peran utama
+    header: "Peran",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("price_weekday"));
-      return <div className="text-right font-medium">{formatRupiah(amount)}</div>;
+      const user = row.original;
+      const role = user.roles[0]?.name || 'user';
+      const style =
+        role === "admin"
+          ? "bg-primary/20 text-primary"
+          : "bg-secondary text-secondary-foreground";
+      return <Badge className={style}>{role.toUpperCase()}</Badge>;
     },
+    enableSorting: false,
   },
-  {
-    accessorKey: "price_weekend",
-    header: () => <div className="text-right">Harga WeekEnd</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("price_weekend"));
-      return <div className="text-right font-medium">{formatRupiah(amount)}</div>;
-    },
-  },
+
+  // 4. Kolom Tanggal Daftar
+
+  // 5. Kolom Aksi
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const field = row.original;
+      const user = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+            <DropdownMenuLabel>Aksi User</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/fields/edit/${field.id}`}>
-                <Edit className="mr-2 h-4 w-4" /> Ubah
-              </Link>
+            <DropdownMenuItem onClick={() => onEdit(user)}>
+              <Edit className="mr-2 h-4 w-4" /> Edit Detail
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => onDelete(user)}
               className="text-destructive"
-              onClick={() => {
-                if (confirm(`Yakin ingin menghapus ${field.name}?`)) {
-                  // panggil service deleteField(field.id)
-                  console.log(`Hapus field ${field.id}`);
-                }
-              }}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Hapus
+              <Trash2 className="mr-2 h-4 w-4" /> Hapus User
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

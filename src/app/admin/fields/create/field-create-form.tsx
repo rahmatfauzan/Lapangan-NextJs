@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import { createField, updateField } from "@/lib/services/field.service";
 import type { Field, SportCategory } from "@/types";
 import useSWR from "swr";
-import { categoryFetcher } from "@/lib/services/category.service";
+import { categoryFetcher, categoryFetchernoPaginate } from "@/lib/services/category.service";
 import Image from "next/image";
 
 // --- Definisikan Skema Validasi (Zod) ---
@@ -78,7 +78,7 @@ type FieldFormValues = z.infer<typeof formSchema>;
 
 // --- Interface Props ---
 interface FieldFormProps {
-  initialData?: Field; // <-- Opsional: Data untuk mode Edit
+  initialData?: any; // <-- Opsional: Data untuk mode Edit
   onSuccess?: () => void; // <-- Opsional: Callback untuk menutup modal
 }
 
@@ -93,7 +93,7 @@ export function FieldForm({ initialData, onSuccess }: FieldFormProps) {
 
   const { data: categories, error: categoriesError } = useSWR<SportCategory[]>(
     "/api/sport-categories",
-    categoryFetcher,
+    categoryFetchernoPaginate,
     { revalidateOnFocus: false }
   );
 
@@ -103,8 +103,8 @@ export function FieldForm({ initialData, onSuccess }: FieldFormProps) {
       name: initialData?.name || "",
       description: initialData?.description || "",
       sport_category_id: initialData?.sport_category.id.toString() || "",
-      price_weekday: initialData?.price_weekday || undefined,
-      price_weekend: initialData?.price_weekend || undefined,
+      price_weekday: initialData?.price_weekday || 0,
+      price_weekend: initialData?.price_weekend || 0,
       status: initialData ? initialData.status === "active" : true,
       field_photo: undefined,
     },
@@ -301,6 +301,7 @@ export function FieldForm({ initialData, onSuccess }: FieldFormProps) {
                           min={0}
                           placeholder="120000"
                           {...field}
+                          value={field.value === 0 ? "" : field.value}
                         />
                       </FormControl>
                       <FormDescription>Senin – Jumat</FormDescription>
@@ -322,6 +323,7 @@ export function FieldForm({ initialData, onSuccess }: FieldFormProps) {
                           min={0}
                           placeholder="180000"
                           {...field}
+                          value={field.value === 0 ? "" : field.value}
                         />
                       </FormControl>
                       <FormDescription>

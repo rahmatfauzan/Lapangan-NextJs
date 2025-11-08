@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
@@ -26,11 +25,7 @@ export default function Navbar() {
 
   // --- 👇 PANGGIL HOOK useAuth KITA ---
   const { user, isLoading, logout } = useAuth();
-  {
-    console.log("Navbar isLoading:", isLoading);
-  }
 
-  {console.log("Navbar user:", user);}
 
   useEffect(() => {
     setMounted(true); // Untuk theme toggle
@@ -41,7 +36,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="p-4 flex items-center justify-end">
+    <nav className="p-4 flex items-center justify-end  z-50">
       <div className="flex gap-4 items-center">
         {/* Tombol Theme Toggle (Kode Anda sudah benar) */}
         <Button

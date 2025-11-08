@@ -46,7 +46,7 @@ export default function AdminLayout({
             <div className="flex items-center gap-2">
               <SidebarTrigger />
             </div>
-            <Navbar />
+            <Navbar/>
           </div>
           <div className="">
             {children}

@@ -15,21 +15,21 @@ import type { Field } from "@/types";
 interface FieldEditModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedField: Field | null;
+  selected: any;
   customDescription?: string;
-  tittle: string;
+  tittle?: string;
   children: React.ReactNode; // <-- Tempat untuk FieldEditForm
 }
 
-export function FieldEditModal({
+export function EditModal({
   open,
   onOpenChange,
-  selectedField,
+  selected,
   customDescription,
   tittle,
   children,
 }: FieldEditModalProps) {
-  if (!selectedField) return null;
+  if (!selected) return null;
 
   return (
     <Dialog  open={open} onOpenChange={onOpenChange}>
@@ -37,8 +37,7 @@ export function FieldEditModal({
         <DialogHeader className="">
           <DialogTitle>{tittle}</DialogTitle>
           <DialogDescription>
-            {customDescription ||
-              `Ubah detail untuk lapangan "${selectedField.name}".`}
+            {customDescription}
           </DialogDescription>
         </DialogHeader>
         {children}

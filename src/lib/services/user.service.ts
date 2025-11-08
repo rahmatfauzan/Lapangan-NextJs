@@ -1,74 +1,60 @@
-import api from '@/lib/axios'; // (Instance Axios kamu)
-import type { User } from '@/types'; // (Asumsi kamu punya Tipe User)
+// lib/services/user.service.ts
 
-// Tipe untuk data Paginasi (sesuai respons Laravel)
-interface PaginatedUsers {
-  data: User[];
-  links: { [key: string]: string | null };
-  meta: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-  };
+import api from "@/lib/axios";
+import type { User, PaginatedResponse } from "@/types";
+
+// Interface untuk data yang akan dikirim saat update
+interface UserUpdateData {
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  role_id: number; // ID peran baru (untuk update role)
 }
 
 /**
- * [ADMIN] Mengambil daftar semua pengguna (dengan paginasi)
+ * [ADMIN] Fetcher untuk SWR (Mengambil daftar pengguna dengan paginasi)
  */
-export async function getAllUsers(page: number = 1): Promise<PaginatedUsers> {
+export const userFetcher = async (
+  url: string
+): Promise<PaginatedResponse<User>> => {
   try {
-    // Panggil endpoint Admin
-    const response = await api.get(`/api/admin/users?page=${page}`);
-    return response.data; // (Laravel Paginate otomatis bungkus di 'data')
+    const response = await api.get(url);
+    console.log(response.data);
+    return response.data;
   } catch (error: any) {
     console.error("Gagal mengambil daftar pengguna:", error);
-    throw new Error("Gagal mengambil data pengguna.");
+    throw new Error("Gagal mengambil daftar pengguna.");
   }
-}
+};
 
 /**
- * [ADMIN] Membuat pengguna baru
- * (data bisa berupa FormData jika ada gambar, atau JSON)
+ * [ADMIN] Mengupdate pengguna
+ * Rute: PUT /api/admin/users/{id}
  */
-export async function createUser(data: any): Promise<User> {
+export async function updateUser(
+  id: number,
+  data: UserUpdateData
+): Promise<User> {
   try {
-    const response = await api.post('/api/admin/users', data, {
-      // (Tambahkan header 'Content-Type': 'multipart/form-data' jika kirim gambar)
-    });
-    return response.data.data; // (Asumsi dibungkus UserResource)
+    // Kirim sebagai JSON biasa menggunakan PUT
+    const response = await api.put(`/api/admin/users/${id}`, data);
+    return response.data.data; // Asumsi backend mengembalikan User Resource
   } catch (error: any) {
-    console.error("Gagal membuat pengguna:", error);
-    throw error; // Lempar error agar form bisa menangani (misal: error validasi)
+    console.error(`Gagal mengupdate user ID ${id}:`, error);
+    throw error;
   }
 }
 
 /**
- * [ADMIN] Update pengguna
+ * [ADMIN] Menghapus pengguna
+ * Rute: DELETE /api/admin/users/{id}
  */
-export async function updateUser(userId: number, data: any): Promise<User> {
-    try {
-        // Ingat 'Method Spoofing' jika kirim gambar
-        // data.append('_method', 'PUT'); 
-        // const response = await api.post(`/api/admin/users/${userId}`, data, { ... });
-        
-        // Jika tidak ada gambar, PUT biasa:
-        const response = await api.put(`/api/admin/users/${userId}`, data);
-        return response.data.data;
-    } catch (error: any) {
-        console.error("Gagal update pengguna:", error);
-        throw error;
-    }
-}
-
-/**
- * [ADMIN] Hapus pengguna
- */
-export async function deleteUser(userId: number): Promise<void> {
-    try {
-        await api.delete(`/api/admin/users/${userId}`);
-    } catch (error: any) {
-        console.error("Gagal menghapus pengguna:", error);
-        throw new Error("Gagal menghapus pengguna.");
-    }
+export async function deleteUser(id: number): Promise<void> {
+  try {
+    await api.delete(`/api/admin/users/${id}`);
+  } catch (error: any) {
+    console.error(`Gagal menghapus user ID ${id}:`, error);
+    throw error;
+  }
 }

@@ -17,24 +17,24 @@ import type { Field } from "@/types";
 interface FieldDeleteModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    selectedField: Field | null;
+    selected: any | null;
     customDescription?: string;
     swrKeyPrefix: string;
     onConfirm: () => Promise<void>; // Handler delete dari parent
     isMutating: boolean; // State loading dari parent
 }
 
-export function FieldDeleteModal({
+export function DeleteModal({
     open,
     onOpenChange,
-    selectedField,
+    selected,
     swrKeyPrefix,
     customDescription,
     onConfirm,
     isMutating,
 }: FieldDeleteModalProps) {
     
-    if (!selectedField) return null;
+    if (!selected) return null;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,7 +45,7 @@ export function FieldDeleteModal({
                         {customDescription || (
                             <>
                                 Apakah anda yakin untuk menghapus lapangan 
-                                <strong> "{selectedField.name}"</strong> secara permanen? Aksi ini tidak bisa dibatalkan.
+                                <strong> "{selected.name}"</strong> secara permanen? Aksi ini tidak bisa dibatalkan.
                             </>
                         )}
                     </DialogDescription>

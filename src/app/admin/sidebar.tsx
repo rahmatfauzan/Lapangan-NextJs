@@ -31,56 +31,50 @@ export function AdminSidebar() {
     {
       title: "Dashboard",
       url: "/admin/dashboard",
-      active: location === "/admin/dashboard" ? true : false,
+      active: String(location).startsWith("/admin/dashboard") ? true : false,
       icon: LayoutDashboard,
     },
     {
       title: "Pengguna",
       url: "/admin/users",
-      active: location === "/admin/users" ? true : false,
+      active: String(location).startsWith("/admin/users") ? true : false,
       icon: Users,
     },
     {
       title: "Lapangan",
       url: "/admin/fields",
-      active: location === "/admin/fields" ? true : false,
+      active: String(location).startsWith("/admin/fields") ? true : false,
       icon: RectangleHorizontal,
     },
     {
       title: "Kategori Olahraga",
-      url: "/admin/sport-categories",
-      active: location === "/admin/sport-categories" ? true : false,
+      url: "/admin/category",
+      active: String(location).startsWith("/admin/category") ? true : false,
       icon: Tags,
     },
     {
-      title: "Event Resmi",
-      url: "/admin/events",
-      active: location === "/admin/events" ? true : false,
-      icon: Trophy,
-    },
-    {
       title: "Booking",
-      url: "/admin/bookings",
-      active: location === "/admin/bookings" ? true : false,
+      url: "/admin/booking",
+      active: String(location).startsWith("/admin/booking") ? true : false,
       icon: BookOpenCheck,
     },
     {
       title: "Sesi Mabar",
-      url: "/admin/mabar-sessions",
-      active: location === "/admin/mabar-sessions" ? true : false,
+      url: "/admin/mabar",
+      active: String(location).startsWith("/admin/mabar") ? true : false,
       icon: MessagesSquare,
     },
     {
       title: "Pengaturan",
       url: "/admin/settings",
-      active: location === "/admin/settings" ? true : false,
+      active: String(location).startsWith("/admin/settings") ? true : false,
       icon: Settings,
     },
   ];
 
   return (
-    <Sidebar>
-      <SidebarHeader>
+    <Sidebar className="">
+      <SidebarHeader className="m-2">
         <div className="flex items-center w-full gap-3">
           <Avatar className="rounded-lg cursor-pointer">
             <AvatarImage

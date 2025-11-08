@@ -5,21 +5,11 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import useSWR, { useSWRConfig } from "swr";
-import { userFetcher, deleteUser } from "@/lib/services/user.service"; // Adjusted the service import
-import { DataTable } from "@/components/data-table"; // DataTable & FilterTab
-import type { User, FilterTab, PaginatedResponse } from "@/types"; // Adjusted types for users
+import { categoryFetcher, deleteCategory } from "@/lib/services/category.service"; // Ganti fieldFetcher menjadi categoryFetcher
+import { DataTable } from "@/components/data-table";
+import type {PaginatedResponse, SportCategory } from "@/types";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-// --- Import TanStack Table Hooks ---
 import {
   SortingState,
   VisibilityState,
@@ -29,34 +19,33 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-// ------------------------------------
-
-// --- Import Modal Components ---
-import { DeleteModal } from "@/components/modal/modal-delete";
+import { createCategoryColumns } from "./columns-category";
 import { EditModal } from "@/components/modal/modal-edit";
-import { createUsersColumns } from "./columns";
-import { UserEditForm } from "./UserEditForm";
+import { DeleteModal } from "@/components/modal/modal-delete";
+import { CategoryForm } from "./category-form";
 
-export default function UsersPage() {
-  // --- State Modal ---
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isMutating, setIsMutating] = useState(false);
-
+// Halaman utama untuk mengelola kategori
+export default function CategoriesPage() {
   // --- State Paginasi & Filter ---
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
   const [filterValue, setFilterValue] = useState("");
   const [debouncedFilter] = useDebounce(filterValue, 500);
 
-  // --- State Tabel ---
+  // --- Dialog States ---
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // --- Tabel States ---
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
+  const [selectedCategory, setSelectedCategory] = useState<SportCategory | null>(null);
+
   const { mutate } = useSWRConfig();
-  const swrKeyPrefix = "/api/admin/users"; // URL for user data
+  const [isMutating, setIsMutating] = useState(false);
+  const swrKeyPrefix = "/api/sport-categories"; // Gunakan URL Admin yang benar
 
   // --- SWR Key Dinamis ---
   const statusFilter = activeTab === "all" ? "" : `&status=${activeTab}`;
@@ -67,7 +56,7 @@ export default function UsersPage() {
     data: paginatedData,
     error,
     isLoading,
-  } = useSWR<PaginatedResponse<User>>(swrKey, userFetcher);
+  } = useSWR<PaginatedResponse<SportCategory>>(swrKey, categoryFetcher); // Ganti fieldFetcher menjadi categoryFetcher
   const data = paginatedData?.data ?? [];
 
   // Reset halaman jika filter berubah
@@ -75,59 +64,55 @@ export default function UsersPage() {
     setPage(1);
   }, [debouncedFilter, activeTab]);
 
-  // --- HANDLER SINKRONISASI PASCA-EDIT/DELETE ---
-  const onEditSuccess = (updatedUserName: string) => {
+  // Handler untuk sukses edit
+  const onEditSuccess = (updatedCategoryName: string) => {
     setIsEditDialogOpen(false);
-    mutate(
-      (key) => typeof key === "string" && key.startsWith(swrKeyPrefix),
-      undefined,
-      { revalidate: true }
-    );
-    toast.success("Sukses!", {
-      description: `Data pengguna "${updatedUserName}" berhasil diperbarui.`,
-    });
+    mutate((key) => typeof key === "string" && key.startsWith(swrKeyPrefix), undefined, { revalidate: true });
   };
 
+  // Handler untuk konfirmasi hapus
   const onConfirmDelete = async () => {
-    if (!selectedUser) return;
-    setIsMutating(true);
+    if (!selectedCategory) return;
+
     try {
-      await deleteUser(selectedUser.id); // Updated the delete function
-      mutate(
-        (key) => typeof key === "string" && key.startsWith(swrKeyPrefix),
-        undefined,
-        { revalidate: true }
-      );
+      setIsMutating(true);
+      await deleteCategory(selectedCategory.id);
+      mutate((key) => typeof key === "string" && key.startsWith(swrKeyPrefix), undefined, { revalidate: true });
       toast.success("Sukses!", {
-        description: `Pengguna "${selectedUser.name}" berhasil dihapus.`,
+        description: `Kategori "${selectedCategory.name}" berhasil dihapus.`,
       });
     } catch (err) {
-      toast.error("Gagal Hapus", { description: "Gagal menghapus data." });
+      toast.error("Gagal Hapus", { description: "Gagal menghapus kategori." });
     } finally {
       setIsMutating(false);
       setIsDeleteDialogOpen(false);
-      setSelectedUser(null);
+      setSelectedCategory(null);
     }
   };
 
-  // --- Handlers Modal & Action ---
-  const handleEditClick = (user: User) => {
-    setSelectedUser(user);
+
+  // --- Event Handlers ---
+  const handleEditClick = (category: SportCategory) => {
+    setSelectedCategory(category);
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteClick = (user: User) => {
-    setSelectedUser(user);
+  const handleDeleteClick = (category: SportCategory) => {
+    setSelectedCategory(category);
     setIsDeleteDialogOpen(true);
   };
 
-  // --- Buat Kolom ---
-  const columns = createUsersColumns({
+  const handleTabChange = (newValue: string) => {
+    setActiveTab(newValue);
+  };
+
+  // --- Kolom Tabel ---
+  const columns = createCategoryColumns({
     onEdit: handleEditClick,
     onDelete: handleDeleteClick,
   });
 
-  // --- INISIALISASI USE REACT TABLE ---
+  // --- Inisialisasi React Table ---
   const table = useReactTable({
     data,
     columns,
@@ -159,18 +144,15 @@ export default function UsersPage() {
     <div className="p-4 md:p-6 space-y-4">
       {/* Header Halaman */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Manajemen Pengguna
-        </h1>
-
+        <h1 className="text-2xl font-semibold tracking-tight">Manajemen Kategori</h1>
         <Button asChild>
-          <Link href="/admin/users/create">
-            <PlusCircle className="mr-2 h-4 w-4" /> Tambah Pengguna
+          <Link href="/admin/category/create"> {/* Ganti 'fields' menjadi 'categories' */}
+            <PlusCircle className="mr-2 h-4 w-4" /> Tambah Kategori {/* Ganti 'Lapangan' menjadi 'Kategori' */}
           </Link>
         </Button>
       </div>
 
-      {/* --- Panggil Komponen DataTable --- */}
+      {/* DataTable */}
       <div className="grid grid-cols-1">
         <DataTable
           table={table}
@@ -182,29 +164,32 @@ export default function UsersPage() {
           onPageChange={(newPageIndex) => setPage(newPageIndex)}
           filterValue={filterValue}
           onFilterChange={setFilterValue}
-          filterPlaceholder="Filter nama pengguna..."
+          filterPlaceholder="Filter nama kategori..."
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
         />
       </div>
 
+      {/* Modal Edit Reusable */}
       <EditModal
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        selected={selectedUser}
-        tittle="Atur Jam Operasional"
-        customDescription="Perbarui detail jam operasional lapangan ini."
+        selected={selectedCategory} // Ganti 'selectedField' menjadi 'selectedCategory'
       >
-        {selectedUser && (
-          <UserEditForm initialData={selectedUser} onSuccess={onEditSuccess} />
+        {selectedCategory && (
+          <CategoryForm
+            initialData={selectedCategory} // Ganti 'selectedField' menjadi 'selectedCategory'
+            onSuccess={() => onEditSuccess(selectedCategory.name)} // Ganti 'selectedField' menjadi 'selectedCategory'
+          />
         )}
       </EditModal>
 
-      {/* --- Modal Delete Reusable --- */}
+      {/* Modal Hapus */}
       <DeleteModal
         open={isDeleteDialogOpen}
+        customDescription="Apakah anda yakin untuk menghapus kategori ini secara permanen? Aksi ini tidak bisa dibatalkan."
         onOpenChange={setIsDeleteDialogOpen}
-        selected={selectedUser}
+        selected={selectedCategory} // Ganti 'selectedField' menjadi 'selectedCategory'
         swrKeyPrefix={swrKeyPrefix}
         onConfirm={onConfirmDelete}
         isMutating={isMutating}

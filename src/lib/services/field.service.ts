@@ -8,6 +8,7 @@ import type {
   FieldOperatingHours,
   PaginatedResponse,
 } from "@/types";
+import { Console } from "console";
 
 /**
  * (1) FETCHER UNTUK SWR
@@ -19,6 +20,7 @@ export const fieldFetcher = async (
   try {
     // Langsung panggil 'url' yang sudah berisi semua parameter
     const response = await api.get(url);
+    // console.log(response.data);
     return response.data;
   } catch (error: any) {
     console.error("Gagal mengambil daftar lapangan:", error);
@@ -146,3 +148,32 @@ export async function deleteFieldBlock(blockId: number): Promise<void> {
     throw new Error("Gagal menghapus jadwal blokir.");
   }
 }
+
+export interface Slot {
+  time: string; // "HH:MM"
+  is_available: boolean;
+  reason: string | null;
+}
+
+/**
+ * [PUBLIK] Mengambil ketersediaan slot
+ * Rute: GET /api/fields/{id}/availability?date=YYYY-MM-DD
+ */
+export const availabilityFetcher = async ({
+  fieldId,
+  date,
+}: {
+  fieldId: string;
+  date: string;
+}): Promise<Slot[]> => {
+  if (!fieldId || !date) return [];
+  try {
+    const response = await api.get(
+      `/api/fields/${fieldId}/availability?date=${date}`
+    );
+    return response.data; // Backend mengembalikan array slot
+  } catch (error: any) {
+    console.error("Gagal mengambil ketersediaan slot:", error);
+    throw new Error("Gagal mengambil ketersediaan slot.");
+  }
+};

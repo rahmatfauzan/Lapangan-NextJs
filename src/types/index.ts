@@ -2,6 +2,15 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  phone: string | null;
+  address: string | null;
+  roles: roles[];
+  image: string | null;
+}
+
+export  interface roles {
+  id: number;
+  name: string;
 }
 
 export interface LoginCredentials {
@@ -16,21 +25,13 @@ export interface DashboardStats {
   activeMabar: number;
 }
 
-export interface Booking {
-  id: number;
-  invoice: string;
-  customer: string;
-  field: string;
-  slots: number;
-  total: number;
-  status: "paid" | "pending" | "cancelled" | "active";
-}
-
 export interface Event {
   id: number;
   title: string;
-  booking_date: string;
+  date: string;
   type: string;
+  host: string;
+  slots: string[];
 }
 
 export interface SportCategory {
@@ -83,7 +84,7 @@ export interface PaginatedResponse<T> {
   meta: PaginationMeta;
 }
 
-export interface FilterTab { 
+export interface FilterTab {
   label: string;
   value: string;
 }
@@ -92,7 +93,7 @@ export type DayHour = {
   day_of_week: number;
   is_open: boolean;
   start_time: string; // HH:MM
-  end_time: string;   // HH:MM
+  end_time: string; // HH:MM
 };
 
 export interface FieldBlock {
@@ -100,5 +101,58 @@ export interface FieldBlock {
   field_id: number;
   reason: string | null;
   start_datetime: string; // "YYYY-MM-DD HH:MM:SS"
-  end_datetime: string;   // "YYYY-MM-DD HH:MM:SS"
+  end_datetime: string; // "YYYY-MM-DD HH:MM:SS"
+}
+
+export interface MabarSession {
+  id: number;
+  title: string;
+  type: "open_play" | "team_challenge" | "mini_tournament";
+  description: string | null;
+  cover_image: string | null; // URL lengkap
+  slots_total: number;
+  price_per_slot: number;
+  payment_instructions: string;
+  fieldName: string;
+  
+  sport_category: SportCategory;
+
+  // Ini didapat dari withCount()
+  participants_count: number;
+
+  // Relasi (dimuat opsional)
+  host?: User;
+  booking?: Booking; // Relasi dengan Booking
+  participants?: MabarParticipant[];
+}
+
+export interface Booking {
+  id: number;
+  invoice_number: string;
+  booked_status: "waiting_payment" | "failed" | "cancelled" | "active";
+  booking_date: string;
+  booked_slots: string[]; // Misalnya slot waktu yang dipesan
+  price: number;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string | null;
+  is_guest_order: boolean;
+  user: User;
+  field: Field; // Data terkait lapangan yang dipesan
+}
+
+export interface MabarParticipant {
+  id: number;
+  status: "awaiting_approval" | "approved" | "rejected" | "waiting_payment";
+  user_id: number;
+  user: User;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  image: string | null;
 }
