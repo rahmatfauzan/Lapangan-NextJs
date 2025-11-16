@@ -8,7 +8,7 @@ export async function login(credentials: LoginCredentials): Promise<User> {
     const user = await getMe();
     return user;
   } catch (error: any) {
-    if (error.response?.status === 422) {
+    if (error.response?.status === 401) {
       throw new Error("Email atau password salah.");
     }
     console.error("Gagal melakukan login:", error);

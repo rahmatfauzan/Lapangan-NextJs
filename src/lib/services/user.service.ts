@@ -58,3 +58,33 @@ export async function deleteUser(id: number): Promise<void> {
     throw error;
   }
 }
+
+// lib/services/user.service.ts
+
+// Interface untuk data yang akan dikirim saat create/update
+interface UserFormInput {
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  role_id: number;
+  // Anda mungkin perlu password saat CREATE
+  password?: string;
+  password_confirmation?: string;
+}
+
+// ... (userFetcher, updateUser, deleteUser sudah ada) ...
+
+/**
+ * [ADMIN] Membuat pengguna baru
+ * Rute: POST /api/admin/users
+ */
+export async function createUser(data: UserFormInput): Promise<User> {
+  try {
+    const response = await api.post("/api/admin/users", data);
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Gagal membuat user baru:", error);
+    throw error;
+  }
+}

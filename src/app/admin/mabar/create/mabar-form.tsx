@@ -338,7 +338,7 @@ export default function MabarForm({ onSuccess }: MabarFormProps) {
                         disabled={isFieldsLoading || !!fieldsError}
                       >
                         <FormControl>
-                          <SelectTrigger className="h-10 border-2 hover:border-primary/50 transition-colors w-full">
+                          <SelectTrigger size="sm" className=" border-2 hover:border-primary/50 transition-colors w-full">
                             <SelectValue
                               placeholder={
                                 isFieldsLoading

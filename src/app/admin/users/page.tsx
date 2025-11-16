@@ -35,7 +35,7 @@ import {
 import { DeleteModal } from "@/components/modal/modal-delete";
 import { EditModal } from "@/components/modal/modal-edit";
 import { createUsersColumns } from "./columns";
-import { UserEditForm } from "./UserEditForm";
+import { UserForm } from "./UserEditForm";
 
 export default function UsersPage() {
   // --- State Modal ---
@@ -196,7 +196,7 @@ export default function UsersPage() {
         customDescription="Perbarui detail jam operasional lapangan ini."
       >
         {selectedUser && (
-          <UserEditForm initialData={selectedUser} onSuccess={onEditSuccess} />
+          <UserForm initialData={selectedUser} onSuccess={onEditSuccess} />
         )}
       </EditModal>
 

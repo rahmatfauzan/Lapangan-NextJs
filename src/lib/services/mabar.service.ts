@@ -29,6 +29,15 @@ export const allFieldsFetcher = async (url: string): Promise<Field[]> => {
     throw new Error("Gagal mengambil daftar lapangan.");
   }
 };
+export const DetailField = async (url: string): Promise<Field> => {
+  try {
+    const response = await api.get(url);
+    return response.data.data || response.data;
+  } catch (error: any) {
+    console.error("Gagal mengambil daftar lapangan:", error);
+    throw new Error("Gagal mengambil daftar lapangan.");
+  }
+};
 
 /**
  * Mengambil detail satu sesi mabar
@@ -81,5 +90,35 @@ export async function joinMabarSession(id: number | string): Promise<any> {
   } catch (error: any) {
     console.error("Gagal bergabung ke sesi mabar:", error);
     throw error;
+  }
+}
+
+// Di file @/lib/services/mabar.service.ts (atau file service Anda)
+export async function uploadPaymentProof(
+  mabarSessionId: string,
+  file: File
+): Promise<any> {
+  try {
+    const formData = new FormData();
+    formData.append("mabar_session_id", mabarSessionId);
+    formData.append("payment_proof_image", file);
+
+    const response = await api.post(
+      "/api/mabar-participants/upload-proof",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Gagal upload bukti pembayaran:", error);
+    // Throw error message dari backend jika ada
+    throw new Error(
+      error.response?.data?.message || "Gagal upload bukti pembayaran"
+    );
   }
 }

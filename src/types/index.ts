@@ -4,14 +4,16 @@ export interface User {
   email: string;
   phone: string | null;
   address: string | null;
-  roles: roles[];
+  roles?: Role[];
+  email_verified_at?: string;
   image: string | null;
 }
 
-export  interface roles {
+export interface Role {
   id: number;
   name: string;
 }
+
 
 export interface LoginCredentials {
   email: string;
@@ -25,19 +27,17 @@ export interface DashboardStats {
   activeMabar: number;
 }
 
-export interface Event {
-  id: number;
-  title: string;
-  date: string;
-  type: string;
-  host: string;
-  slots: string[];
+export interface  Slots{
+  time: string
+  is_available: boolean
+  reason: string
 }
 
 export interface SportCategory {
   id: number;
   name: string;
   icon?: string;
+  fields_count:number;
 }
 
 // types/index.ts
@@ -53,7 +53,7 @@ export interface Field {
   name: string;
   description?: string;
   status: "active" | "inactive";
-  field_photo?: string;
+  field_photo?: null;
   price_weekday: number;
   price_weekend: number;
   sport_category: SportCategory;
@@ -156,3 +156,5 @@ export interface User {
   address: string | null;
   image: string | null;
 }
+
+

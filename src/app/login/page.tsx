@@ -1,14 +1,10 @@
-import { LoginForm } from "@/components/login-form";
-import { AuthProvider } from "@/context/AuthContext";
+"use client";
 
-export default function Page() {
-  return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        {/* <AuthProvider> */}
-          <LoginForm />
-        {/* </AuthProvider> */}
-      </div>
-    </div>
-  );
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Eye, EyeOff, Mail, Lock, Loader2, LogIn, AlertCircle } from "lucide-react";
+import LoginForm from "@/components/login-form";
+
+export default function LoginPage() {
+ return <LoginForm />
 }
