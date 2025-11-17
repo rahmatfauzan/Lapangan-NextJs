@@ -54,4 +54,24 @@ const getParticipantStatus = (mabar: MabarSession, currentUserId: number | undef
     return { isHost: false, status: 'NOT_JOINED' };
 };
 
+export const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+
+export const formatDate = (date: string): string => {
+  return new Date(date).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+export const getParticipantInitial = (name: string): string => {
+  return name?.charAt(0).toUpperCase() || "?";
+};
+
 export { formatRupiah, getParticipantStatus, getEndTime };

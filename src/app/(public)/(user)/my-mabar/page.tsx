@@ -80,7 +80,7 @@ export default function MyMabarPage() {
 
     setDeletingId(sessionId);
     try {
-      const response = await api.delete(`/mabar-sessions/${sessionId}`);
+      const response = await api.delete(`api/mabar-sessions/${sessionId}`);
 
       if (response.data.success) {
         toast.success("Sesi mabar berhasil dihapus");
@@ -105,7 +105,7 @@ export default function MyMabarPage() {
   };
 
   const handleContinuePayment = (invoiceNumber: string) => {
-    router.push(`/booking/continue?invoice=${invoiceNumber}&source=mabar`);
+    router.push(`api/booking/continue?invoice=${invoiceNumber}&source=mabar`);
   };
 
   return (

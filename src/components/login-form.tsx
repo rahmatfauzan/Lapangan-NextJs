@@ -58,7 +58,7 @@ const LoginForm = () => {
         >
           {/* Header Gradient */}
           <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white">
-            <h2 className="text-2xl font-bold mb-1">Login Admin</h2>
+            <h2 className="text-2xl font-bold mb-1">Login GoMabar</h2>
             <p className="text-sm opacity-90">Masukkan kredensial Anda untuk melanjutkan</p>
           </div>
 

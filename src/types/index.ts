@@ -1,3 +1,5 @@
+import { Participant } from "./edit-mabar";
+
 export interface User {
   id: number;
   name: string;
@@ -14,7 +16,6 @@ export interface Role {
   name: string;
 }
 
-
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -27,17 +28,17 @@ export interface DashboardStats {
   activeMabar: number;
 }
 
-export interface  Slots{
-  time: string
-  is_available: boolean
-  reason: string
+export interface Slots {
+  time: string;
+  is_available: boolean;
+  reason: string;
 }
 
 export interface SportCategory {
   id: number;
   name: string;
   icon?: string;
-  fields_count:number;
+  fields_count: number;
 }
 
 // types/index.ts
@@ -114,7 +115,7 @@ export interface MabarSession {
   price_per_slot: number;
   payment_instructions: string;
   fieldName: string;
-  
+
   sport_category: SportCategory;
 
   // Ini didapat dari withCount()
@@ -123,7 +124,7 @@ export interface MabarSession {
   // Relasi (dimuat opsional)
   host?: User;
   booking?: Booking; // Relasi dengan Booking
-  participants?: MabarParticipant[];
+  participants?: Participant[];
 }
 
 export interface Booking {
@@ -145,6 +146,9 @@ export interface MabarParticipant {
   id: number;
   status: "awaiting_approval" | "approved" | "rejected" | "waiting_payment";
   user_id: number;
+  mabar_session_id: number;
+  guest_name?: string;
+  guest_phone?: string;
   user: User;
 }
 
@@ -156,5 +160,3 @@ export interface User {
   address: string | null;
   image: string | null;
 }
-
-

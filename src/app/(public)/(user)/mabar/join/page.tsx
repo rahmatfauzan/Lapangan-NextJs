@@ -281,6 +281,7 @@ export default function JoinBookingDetailPage() {
 
     setIsUploading(true);
     try {
+      console.log("📤 Uploading payment proof:", sessionId);
       await uploadPaymentProof(sessionId, file);
       toast.success("Bukti pembayaran berhasil diupload!");
 

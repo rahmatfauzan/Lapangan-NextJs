@@ -74,6 +74,7 @@ export default function MabarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch] = useDebounce(searchQuery, 500);
   const router = useRouter();
+  
   // --- FETCH DATA ---
   const { data: categories } = useSWR<SportCategory[]>(
     "/api/sport-categories",

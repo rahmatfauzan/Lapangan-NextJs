@@ -9,6 +9,7 @@ import {
   Edit,
   Eye,
   FileImage,
+  FileX,
   Loader2,
   MapPin,
   PlayCircle,
@@ -23,24 +24,26 @@ import {
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 
-export const TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> =
-  {
-    open_play: {
-      label: "Open Play",
-      icon: Target,
-      color: "from-blue-500 to-blue-600",
-    },
-    mini_tournament: {
-      label: "Mini Turnamen",
-      icon: Trophy,
-      color: "from-yellow-500 to-yellow-600",
-    },
-    team_challenge: {
-      label: "Team Challenge",
-      icon: Smile,
-      color: "from-purple-500 to-purple-600",
-    },
-  };
+export const TYPE_LABELS: Record<
+  string,
+  { label: string; icon: any; color: string }
+> = {
+  open_play: {
+    label: "Open Play",
+    icon: Target,
+    color: "from-blue-500 to-blue-600",
+  },
+  mini_tournament: {
+    label: "Mini Turnamen",
+    icon: Trophy,
+    color: "from-yellow-500 to-yellow-600",
+  },
+  team_challenge: {
+    label: "Team Challenge",
+    icon: Smile,
+    color: "from-purple-500 to-purple-600",
+  },
+};
 
 export const formatPrice = (price: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -135,7 +138,7 @@ const getBookingStatusBadge = (status: string) => {
   );
 };
 
-// ✅ Card View Component
+// ✅ Card View Component - FIXED VERSION
 export const MabarCard = ({
   session,
   activeTab,
@@ -155,11 +158,16 @@ export const MabarCard = ({
   const slotsTotal = session?.mabar?.slots_total || session?.slots_total || 1;
   const pricePerSlot =
     session?.price_per_slot || session?.mabar?.price_per_slot || 0;
+
+  // ✅ FIX: Gunakan field yang sama seperti table
   const paymentProof =
-    session?.payment_proof || session?.participant_payment_proof;
+    session?.payment_proof_image || session?.participant_payment_proof;
+
   const userStatus =
     session.user_status || session.participant_status || session.status;
-  const bookingStatus = session?.booking?.status || session?.booking_status;
+
+  // ✅ FIX: Gunakan bookingStatus yang sama seperti table
+  const bookingStatus = session?.bookingStatus;
 
   return (
     <motion.div
@@ -267,22 +275,26 @@ export const MabarCard = ({
               {getParticipantStatusBadge(userStatus)}
             </div>
 
-            {paymentProof && (
-              <div>
-                <p className="text-xs text-gray-500 font-medium mb-2">
-                  Bukti Pembayaran
-                </p>
+            {/* ✅ FIX: Tampilkan badge seperti di table */}
+            <div>
+              <p className="text-xs text-gray-500 font-medium mb-2">
+                Bukti Pembayaran
+              </p>
+              {paymentProof ? (
                 <button
                   onClick={() => onViewPaymentProof(paymentProof)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all w-full justify-center"
                 >
                   <FileImage className="w-4 h-4" />
-                  <span className="text-sm font-semibold">
-                    Lihat Bukti Pembayaran
-                  </span>
+                  <span className="text-sm font-semibold">Lihat</span>
                 </button>
-              </div>
-            )}
+              ) : (
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-lg w-full justify-center">
+                  <FileX className="w-4 h-4" />
+                  <span className="text-sm font-medium">Belum Upload</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -311,8 +323,8 @@ export const MabarCard = ({
           <>
             {bookingStatus === "waiting_payment" ? (
               <button
-                onClick={() => onContinuePayment(session.id)}
-                className="py-2.5 px-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all flex items-center gap-2"
+                onClick={() => onContinuePayment(session.invoice)}
+                className="py-2.5 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2"
                 title="Lanjut Pembayaran"
               >
                 <CreditCard className="w-4 h-4" />
@@ -348,13 +360,19 @@ export const MabarCard = ({
               <button
                 onClick={() => onCancelClick(session.id)}
                 disabled={cancelingId === session.id}
-                className="py-2.5 px-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all disabled:opacity-50"
+                className="py-2.5 px-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all disabled:opacity-50 flex items-center gap-2"
                 title="Cancel"
               >
                 {cancelingId === session.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm font-medium">Batal</span>
+                  </>
                 ) : (
-                  <UserX className="w-4 h-4" />
+                  <>
+                    <UserX className="w-4 h-4" />
+                    <span className="text-sm font-medium">Batal</span>
+                  </>
                 )}
               </button>
             )}

@@ -38,7 +38,7 @@ import { PaymentProofPreviewModal } from "./component/PaymentProofPreviewModal";
 import { uploadPaymentProof } from "@/lib/services/mabar.service";
 import { mutate } from "swr";
 import { toast } from "sonner";
-import cancelMabarSession from "@/lib/services/mabar-edit.service";
+import { cancelMabarSession } from "@/lib/services/mabar-edit.service";
 
 type TabType = "joined" | "created";
 type ViewType = "table" | "card";

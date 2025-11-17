@@ -1,55 +1,34 @@
+// lib/services/mabar-edit.service.ts (atau mabar.service.ts)
 import api from "@/lib/axios";
 
-// ==================== TIPE DATA ====================
-interface UpdateSessionData {
-  title?: string;
-  description?: string;
-  slots_total?: number;
-  price_per_slot?: number;
-  payment_instructions?: string;
+export interface EditFormData {
+  title: string;
+  description: string;
+  slots_total: number;
+  price_per_slot: number;
+  cover_image: string;
+  payment_instructions: string;
 }
 
 interface AddGuestData {
-  name: string;
-  phone: string;
-  email?: string;
+  guest_name: string;
 }
 
-// ==================== GET SESSION (sudah ada) ====================
+// ==================== GET SESSION ====================
 export const getMabarSession = async (sessionId: string) => {
   const response = await api.get(`api/mabar-sessions/${sessionId}`);
-  return response.data;
-};
-
-// ==================== UPDATE SESSION ====================
-/**
- * Update informasi sesi mabar (hanya untuk host)
- * Endpoint: PATCH /api/mabar/:sessionId
- */
-export const updateMabarSession = async (
-  sessionId: string,
-  data: UpdateSessionData
-) => {
-  try {
-    const response = await api.patch(`/mabar/${sessionId}`, data);
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Gagal update sesi");
-  }
+  return response.data.data;
 };
 
 // ==================== APPROVE PARTICIPANT ====================
-/**
- * Menyetujui peserta yang pending/awaiting_approval
- * Endpoint: POST /api/mabar/:sessionId/participants/:participantId/approve
- */
 export const approveParticipant = async (
   sessionId: string,
   participantId: string
 ) => {
   try {
-    const response = await api.post(
-      `/mabar/${sessionId}/participants/${participantId}/approve`
+    const response = await api.patch(
+      `api/mabar-participants/${participantId}/status`,
+      { status: "approved" }
     );
     return response.data;
   } catch (error: any) {
@@ -60,17 +39,14 @@ export const approveParticipant = async (
 };
 
 // ==================== REJECT PARTICIPANT ====================
-/**
- * Menolak peserta yang pending/awaiting_approval
- * Endpoint: POST /api/mabar/:sessionId/participants/:participantId/reject
- */
 export const rejectParticipant = async (
   sessionId: string,
   participantId: string
 ) => {
   try {
-    const response = await api.post(
-      `/mabar/${sessionId}/participants/${participantId}/reject`
+    const response = await api.patch(
+      `api/mabar-participants/${participantId}/status`,
+      { status: "rejected" }
     );
     return response.data;
   } catch (error: any) {
@@ -79,17 +55,13 @@ export const rejectParticipant = async (
 };
 
 // ==================== REMOVE PARTICIPANT ====================
-/**
- * Menghapus peserta dari sesi
- * Endpoint: DELETE /api/mabar/:sessionId/participants/:participantId
- */
 export const removeParticipant = async (
   sessionId: string,
   participantId: string
 ) => {
   try {
     const response = await api.delete(
-      `/mabar/${sessionId}/participants/${participantId}`
+      `api/mabar-participants/${participantId}`
     );
     return response.data;
   } catch (error: any) {
@@ -98,17 +70,13 @@ export const removeParticipant = async (
 };
 
 // ==================== ADD GUEST PARTICIPANT ====================
-/**
- * Menambahkan peserta guest (tanpa akun) ke sesi
- * Endpoint: POST /api/mabar/:sessionId/participants/guest
- */
 export const addGuestParticipant = async (
   sessionId: string,
   data: AddGuestData
 ) => {
   try {
     const response = await api.post(
-      `/mabar/${sessionId}/participants/guest`,
+      `api/mabar-sessions/${sessionId}/add-manual`,
       data
     );
     return response.data;
@@ -119,14 +87,14 @@ export const addGuestParticipant = async (
   }
 };
 
-// ==================== UPLOAD PAYMENT PROOF (sudah ada) ====================
-export const uploadPaymentProof = async (sessionId: string, file: File) => {
+// ==================== UPDATE SESSION ====================
+export const updateMabarSession = async (
+  sessionId: string,
+  formData: FormData
+) => {
   try {
-    const formData = new FormData();
-    formData.append("payment_proof", file);
-
     const response = await api.post(
-      `/mabar/${sessionId}/upload-payment`,
+      `api/mabar-sessions/${sessionId}`,
       formData,
       {
         headers: {
@@ -134,20 +102,18 @@ export const uploadPaymentProof = async (sessionId: string, file: File) => {
         },
       }
     );
-    return response.data;
+    return response.data.data || response.data;
   } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || "Gagal upload bukti pembayaran"
-    );
+    throw new Error(error.response?.data?.message || "Gagal update sesi");
   }
 };
 
-export default async function cancelMabarSession(sessionId: number) {
+// ==================== CANCEL SESSION ====================
+export async function cancelMabarSession(sessionId: number) {
   try {
     const response = await api.post(`api/mabar-participants/cancel`, {
-      mabar_participant_id: sessionId, // dikirim lewat body
+      mabar_participant_id: sessionId,
     });
-
     return response.data;
   } catch (error: any) {
     throw new Error(
