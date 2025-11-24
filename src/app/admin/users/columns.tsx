@@ -105,11 +105,11 @@ export const createUsersColumns = ({
   // 3. Kolom Peran (Role)
   {
     id: "role",
-    accessorFn: (row) => row.roles[0] ?? "user", // Asumsi satu peran utama
+    accessorFn: (row) => row?.roles?.[0] ?? "user", // Asumsi satu peran utama
     header: "Peran",
     cell: ({ row }) => {
       const user = row.original;
-      const role = user.roles[0]?.name || 'user';
+      const role = user?.roles?.[0]?.name || 'user';
       const style =
         role === "admin"
           ? "bg-primary/20 text-primary"
