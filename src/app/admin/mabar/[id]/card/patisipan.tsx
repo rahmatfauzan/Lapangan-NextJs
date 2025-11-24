@@ -44,6 +44,7 @@ const ParticipantsCard = ({
 }) => {
   const { user } = useAuth();
   const participants = mabar.participants || [];
+  console.log("Mabar Participants:", participants);
   return (
     <Card className="shadow-xl bg-card/95 backdrop-blur-sm border">
       <CardHeader>
@@ -67,7 +68,7 @@ const ParticipantsCard = ({
               const { text, style } = getStatusDisplay(p.status);
 
               // Tentukan label Host/Member
-              const isHost = mabar.host?.id === p.user_id;
+              const isHost = mabar.host?.id === Number(p.id);
 
               return (
                 <div
@@ -80,7 +81,7 @@ const ParticipantsCard = ({
                     </div>
                     <div>
                       <span className="font-semibold text-foreground block">
-                        {p.user?.name || "Anonim"}
+                        {p.name || "Anonim"}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {/* Tampilkan label Host atau Member */}
