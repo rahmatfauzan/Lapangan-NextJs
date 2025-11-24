@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { DashboardStats, Booking, Event } from "@/types";
+import type { DashboardStats, Booking, UpcomingMabar } from "@/types";
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
@@ -21,7 +21,7 @@ export async function getRecentBookings(): Promise<Booking[]> {
   }
 }
 
-export async function getUpcomingMabar(): Promise<Event[]> {
+export async function getUpcomingMabar(): Promise<UpcomingMabar[]> {
   try {
     const response = await api.get("/api/admin/dashboard/upcoming-mabar");
     return response.data;

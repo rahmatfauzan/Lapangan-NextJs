@@ -142,6 +142,16 @@ export interface Booking {
   field: Field; // Data terkait lapangan yang dipesan
 }
 
+export interface UpcomingMabar {
+  id: number;
+  title: string;
+  type: "open_play" | "team_challenge" | "mini_tournament";
+  host: string;
+  fieldName: string;
+  date: string;
+  slots_total: any;
+}
+
 export interface MabarParticipant {
   id: number;
   status: "awaiting_approval" | "approved" | "rejected" | "waiting_payment";
@@ -159,4 +169,16 @@ export interface User {
   phone: string | null;
   address: string | null;
   image: string | null;
+}
+
+export default interface Event {
+  id: number;
+  title: string;
+  type: "open_play" | "team_challenge" | "mini_tournament";
+  description: string | null;
+  cover_image: string | null; // URL lengkap
+  slots_total: number;
+  price_per_slot: number;
+  payment_instructions: string;
+  fieldName: string;
 }

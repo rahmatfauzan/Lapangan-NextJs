@@ -32,7 +32,7 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import type { DashboardStats, Booking, Event } from "@/types";
+import type { DashboardStats, Booking, UpcomingMabar } from "@/types";
 import {
   getDashboardStats,
   getRecentBookings,
@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
-  const [UpcomingMabar, setUpcomingMabar] = useState<Event[]>([]);
+  const [UpcomingMabar, setUpcomingMabar] = useState<UpcomingMabar[]>([]);
   const [isPageLoading, setIsPageLoading] = useState(true);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
 
     fetchDashboardData();
   }, []);
-
+  console.log(recentBookings);
   const formatRupiah = (number: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -208,22 +208,24 @@ export default function AdminDashboardPage() {
                 {recentBookings.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell className="font-medium">
-                      {booking.invoice}
+                      {booking.invoice_number}
                     </TableCell>
-                    <TableCell>{booking.customer}</TableCell>
+                    <TableCell>{booking.customer_name}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {booking.field}
+                      {booking.field.name}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatRupiah(booking.total)}
+                      {formatRupiah(booking.price)}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          booking.status === "paid" ? "default" : "secondary"
+                          booking.booked_status === "active"
+                            ? "default"
+                            : "secondary"
                         }
                       >
-                        {booking.status}
+                        {booking.booked_status}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -232,7 +234,7 @@ export default function AdminDashboardPage() {
             </Table>
             <div className="mt-4 text-center">
               <Button variant="outline" size="sm" asChild>
-                <Link href="/admin/bookings">Lihat Semua Booking</Link>
+                <Link href="/admin/booking">Lihat Semua Booking</Link>
               </Button>
             </div>
           </CardContent>
