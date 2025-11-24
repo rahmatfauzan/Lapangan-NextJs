@@ -42,8 +42,8 @@ import {
 } from "@/lib/services/mabar.service";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import JoinSessionModal from "./modal"; // Ensure extension is correct in your project
 import { UploadPaymentModal } from "../../my-mabar/components/UploadPaymentModal";
+import JoinSessionModal from "./modal.tsx";
 
 // ==================== UTILITIES ====================
 
