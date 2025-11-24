@@ -6,7 +6,7 @@ import api from "@/lib/axios";
 import { Users, Crown, Loader2, Search, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import Pagination from "./component/Pagination";
+import Pagination from "./components/Pagination";
 import MabarTable from "./MabarTable";
 import EmptyState from "./Empty.state";
 import useSWR from "swr";

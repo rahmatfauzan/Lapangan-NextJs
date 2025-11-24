@@ -31,10 +31,10 @@ import {
   formatTimeSlots,
   MabarCard,
   TYPE_LABELS,
-} from "./component/MabarCard";
-import { UploadPaymentModal } from "./component/UploadPaymentModal";
-import { CancelConfirmationModal } from "./component/CancelConfirmationModal";
-import { PaymentProofPreviewModal } from "./component/PaymentProofPreviewModal";
+} from "./components/MabarCard";
+import { UploadPaymentModal } from "./components/UploadPaymentModal";
+import { CancelConfirmationModal } from "./components/CancelConfirmationModal";
+import { PaymentProofPreviewModal } from "./components/PaymentProofPreviewModal";
 import { uploadPaymentProof } from "@/lib/services/mabar.service";
 import { mutate } from "swr";
 import { toast } from "sonner";
