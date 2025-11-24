@@ -42,8 +42,8 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
   const [password, setPassword] = useState(""); // <-- Tambahan untuk Create
   const [passwordConfirmation, setPasswordConfirmation] = useState(""); // <-- Tambahan untuk Create
 
-  const currentRoleId = initialData?.roles[0]?.id.toString() || "2";
-  const [roleId, setRoleId] = useState(currentRoleId);
+  const defaultRoleId = initialData?.roles?.[0]?.id?.toString() || "2";
+  const [roleId, setRoleId] = useState(defaultRoleId);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
       setEmail(initialData.email);
       setPhone(initialData.phone || "");
       setAddress(initialData.address || "");
-      setRoleId(initialData.roles[0]?.id.toString() || "2");
+      setRoleId(defaultRoleId || "2");
       setPassword(""); // Kosongkan password saat membuka modal edit
       setPasswordConfirmation("");
       setError(null);
