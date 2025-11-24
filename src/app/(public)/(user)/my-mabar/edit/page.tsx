@@ -1,7 +1,7 @@
 // app/host-mabar/page.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, Suspense } from "react"; // 1. Import Suspense
 import { Loader2, AlertCircle, UserPlus } from "lucide-react";
 import useSWR from "swr";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -15,7 +15,8 @@ import { AddParticipantModal } from "./components/AddParticipantCard";
 import { ImageModal } from "./components/imageModal";
 import { useMabarActions } from "@/lib/hook/useMabarActions";
 
-export default function HostMabarPage() {
+// 2. Pisahkan Logic Utama ke Component "Content"
+function HostMabarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("id");
@@ -42,11 +43,16 @@ export default function HostMabarPage() {
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      onSuccess: (data) => setSession(data),
+      // onSuccess bisa tetap dipakai, tapi useEffect lebih robust untuk sinkronisasi state
     }
   );
 
-  console.log("SWR data:", session);
+  // Sync Data SWR ke Zustand
+  useEffect(() => {
+    if (data) {
+      setSession(data);
+    }
+  }, [data, setSession]);
 
   // Actions dari custom hook
   const {
@@ -59,7 +65,7 @@ export default function HostMabarPage() {
 
   const stats = getStats();
 
-  // Loading State
+  // Loading State (Saat data belum ada di SWR dan belum ada di Store)
   if (!data && !session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 flex items-center justify-center">
@@ -71,7 +77,7 @@ export default function HostMabarPage() {
     );
   }
 
-  // Error State
+  // Error State (SWR selesai tapi data kosong/null)
   if (!session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 flex items-center justify-center">
@@ -152,5 +158,20 @@ export default function HostMabarPage() {
         onClose={closeImageModal}
       />
     </div>
+  );
+}
+
+// 3. Buat Wrapper Default Export dengan Suspense
+export default function HostMabarPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 flex items-center justify-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+        </div>
+      }
+    >
+      <HostMabarContent />
+    </Suspense>
   );
 }
