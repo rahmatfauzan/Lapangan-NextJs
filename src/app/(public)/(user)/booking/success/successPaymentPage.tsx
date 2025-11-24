@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react"; // 1. Tambah import Suspense
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/axios";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 
-export default function BookingSuccessPage() {
+// 2. Ubah nama fungsi utama menjadi BookingSuccessContent
+function BookingSuccessContent() {
   const searchParams = useSearchParams();
   const invoice = searchParams.get("invoice");
   const [booking, setBooking] = useState<any>(null);
@@ -37,7 +38,7 @@ export default function BookingSuccessPage() {
     };
 
     fetchBooking();
-  }, [invoice]);
+  }, [invoice, router]); // Tambahkan router ke dependency array
 
   if (isLoading) {
     return (
@@ -146,7 +147,9 @@ export default function BookingSuccessPage() {
         )}
 
         <button
-          onClick={() => (window.location.href = `/booking/${booking?.invoice_number}`)}
+          onClick={() =>
+            (window.location.href = `/booking/${booking?.invoice_number}`)
+          }
           className="w-full bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition mb-2"
         >
           Lihat Detail Booking
