@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -25,6 +26,7 @@ import {
   XCircle,
   Upload,
   LogIn,
+  Loader2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,7 +42,7 @@ import {
 } from "@/lib/services/mabar.service";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import JoinSessionModal from "./modal.tsx";
+import JoinSessionModal from "./modal"; // Ensure extension is correct in your project
 import { UploadPaymentModal } from "../../my-mabar/components/UploadPaymentModal";
 
 // ==================== UTILITIES ====================
@@ -73,19 +75,51 @@ const TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> =
 
 // ==================== COMPONENTS ====================
 
-const InfoItem = ({ icon: Icon, label, value, colorClass = "orange" }: any) => (
-  <div
-    className={`flex items-center gap-3 p-3 bg-${colorClass}-50 rounded-lg border border-${colorClass}-100`}
-  >
-    <div className={`p-2 bg-${colorClass}-500 rounded-lg`}>
-      <Icon className="w-4 h-4 text-white" />
+// ✅ FIXED: Tailwind Dynamic Classes
+// Tailwind cannot read `bg-${color}-50` at build time. We must map them explicitly.
+const colorVariants: Record<
+  string,
+  { bg: string; border: string; iconBg: string }
+> = {
+  orange: {
+    bg: "bg-orange-50",
+    border: "border-orange-100",
+    iconBg: "bg-orange-500",
+  },
+  blue: {
+    bg: "bg-blue-50",
+    border: "border-blue-100",
+    iconBg: "bg-blue-500",
+  },
+  purple: {
+    bg: "bg-purple-50",
+    border: "border-purple-100",
+    iconBg: "bg-purple-500",
+  },
+  green: {
+    bg: "bg-green-50",
+    border: "border-green-100",
+    iconBg: "bg-green-500",
+  },
+};
+
+const InfoItem = ({ icon: Icon, label, value, colorClass = "orange" }: any) => {
+  const styles = colorVariants[colorClass] || colorVariants.orange;
+
+  return (
+    <div
+      className={`flex items-center gap-3 p-3 rounded-lg border ${styles.bg} ${styles.border}`}
+    >
+      <div className={`p-2 rounded-lg ${styles.iconBg}`}>
+        <Icon className="w-4 h-4 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-500 font-medium">{label}</p>
+        <p className="font-bold text-gray-900 text-sm truncate">{value}</p>
+      </div>
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-gray-500 font-medium">{label}</p>
-      <p className="font-bold text-gray-900 text-sm truncate">{value}</p>
-    </div>
-  </div>
-);
+  );
+};
 
 // ✅ DYNAMIC JOIN BUTTON
 const JoinButton = ({
@@ -101,7 +135,6 @@ const JoinButton = ({
 }) => {
   const router = useRouter();
 
-  // Button configurations
   const BUTTON_CONFIG: Record<
     string,
     {
@@ -134,7 +167,7 @@ const JoinButton = ({
       label: "Anda Sudah Terdaftar",
       disabled: true,
       onClick: () => {},
-      className: "bg-white text-green-600 cursor-not-allowed",
+      className: "bg-white text-green-600 cursor-not-allowed border",
       icon: CheckCircle2,
     },
     pending: {
@@ -142,14 +175,14 @@ const JoinButton = ({
       disabled: true,
       onClick: () => {},
       className:
-        "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white cursor-wait animate-pulse",
+        "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white cursor-wait",
       icon: Clock,
     },
     rejected: {
       label: "Permintaan Ditolak",
       disabled: true,
       onClick: () => {},
-      className: "text-red-600 bg-white cursor-not-allowed",
+      className: "text-red-600 bg-white cursor-not-allowed border",
       icon: XCircle,
     },
     waiting_payment: {
@@ -161,24 +194,28 @@ const JoinButton = ({
       icon: Upload,
     },
     awaiting_approval: {
-      label: "Menunggu Persetujuan Host",
+      label: "Menunggu Konfirmasi Host",
       disabled: true,
       onClick: () => {},
       className:
-        "bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-wait animate-pulse",
+        "bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-wait",
       icon: Clock,
     },
     none: {
       label: "Gabung Sekarang",
       disabled: false,
       onClick: onJoin,
-      className: "bg-white text-orange-600 hover:bg-gray-50",
+      className: "bg-white text-orange-600 hover:bg-gray-50 border",
       icon: UserPlus,
     },
   };
 
-  // Handle full slots
-  if (availableSlots === 0) {
+  // Handle full slots (Only if user is NOT already part of the session)
+  const isParticipant = ["approved", "pending", "waiting_payment"].includes(
+    status
+  );
+
+  if (availableSlots <= 0 && !isParticipant && status !== "host") {
     return (
       <div className="space-y-2">
         <div className="w-full bg-gray-400 text-white font-bold py-5 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
@@ -208,7 +245,7 @@ const JoinButton = ({
         {config.label}
       </motion.button>
 
-      {availableSlots <= 3 && status === "none" && (
+      {availableSlots <= 3 && availableSlots > 0 && status === "none" && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -219,7 +256,6 @@ const JoinButton = ({
         </motion.div>
       )}
 
-      {/* Info untuk status waiting_payment */}
       {status === "waiting_payment" && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -234,9 +270,9 @@ const JoinButton = ({
   );
 };
 
-// ==================== MAIN COMPONENT ====================
-
-export default function JoinBookingDetailPage() {
+// ==================== CONTENT COMPONENT ====================
+// This component contains the logic that uses useSearchParams
+function JoinBookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -258,7 +294,7 @@ export default function JoinBookingDetailPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [sessionId]);
 
-  // ✅ Get user status
+  // Get user status
   const getUserStatus = (): string => {
     if (!user) return "guest";
     if (!session) return "none";
@@ -272,7 +308,7 @@ export default function JoinBookingDetailPage() {
 
   const status = getUserStatus();
 
-  // ✅ Handler untuk upload bukti pembayaran
+  // Handle Upload
   const handleUploadPayment = async (file: File) => {
     if (!sessionId) {
       toast.error("Session ID tidak ditemukan");
@@ -281,14 +317,9 @@ export default function JoinBookingDetailPage() {
 
     setIsUploading(true);
     try {
-      console.log("📤 Uploading payment proof:", sessionId);
       await uploadPaymentProof(sessionId, file);
       toast.success("Bukti pembayaran berhasil diupload!");
-
-      // Revalidate data
       mutate(["mabar", sessionId]);
-
-      // Tutup modal
       setUploadModalOpen(false);
     } catch (error: any) {
       toast.error(error.message || "Gagal upload bukti pembayaran");
@@ -322,19 +353,19 @@ export default function JoinBookingDetailPage() {
     mutate(sessionId ? ["mabar", sessionId] : null);
   };
 
-  // ==================== LOADING STATE ====================
+  // Loading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Memuat...</p>
+          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Memuat info mabar...</p>
         </div>
       </div>
     );
   }
 
-  // ==================== ERROR STATE ====================
+  // Error
   if (!session) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -354,14 +385,17 @@ export default function JoinBookingDetailPage() {
     );
   }
 
-  // ==================== VARIABLES ====================
-  const availableSlots = session.slots_total - session.participants_count;
-  const progressPercentage =
-    (session.participants_count / session.slots_total) * 100;
+  const availableSlots = Math.max(
+    0,
+    session.slots_total - session.participants_count
+  );
+  const progressPercentage = Math.min(
+    100,
+    (session.participants_count / session.slots_total) * 100
+  );
   const typeConfig = TYPE_LABELS[session.type] || TYPE_LABELS.open_play;
   const TypeIcon = typeConfig.icon;
 
-  // ==================== RENDER ====================
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Header */}
@@ -385,25 +419,25 @@ export default function JoinBookingDetailPage() {
           <h1 className="text-2xl font-bold mb-2">{session.title}</h1>
           <div className="flex flex-wrap gap-2">
             <Badge
-              className={`bg-gradient-to-r ${typeConfig.color} text-white flex items-center gap-1`}
+              className={`bg-gradient-to-r ${typeConfig.color} text-white flex items-center gap-1 border-none`}
             >
               <TypeIcon className="w-3 h-3" />
               {typeConfig.label}
             </Badge>
-            <Badge className="bg-white/20 backdrop-blur-sm text-white">
+            <Badge className="bg-white/20 backdrop-blur-sm text-white border-none">
               {session.sport_category?.name}
             </Badge>
             <Badge
-              className={
+              className={`${
                 availableSlots > 0
-                  ? "bg-green-400/90 text-white"
+                  ? "bg-green-400/90"
                   : "bg-red-400/90 text-white"
-              }
+              } text-white border-none`}
             >
               {availableSlots > 0 ? `${availableSlots} Slot Tersisa` : "Penuh"}
             </Badge>
             {status !== "none" && status !== "guest" && (
-              <Badge className="bg-blue-400/90 text-white flex items-center gap-1">
+              <Badge className="bg-blue-400/90 text-white flex items-center gap-1 border-none">
                 {status === "host" && <Crown className="w-3 h-3" />}
                 {status === "host"
                   ? "Host"
@@ -420,7 +454,7 @@ export default function JoinBookingDetailPage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-4">
             {/* Main Info */}
-            <Card className="shadow-lg">
+            <Card className="shadow-sm border-gray-100">
               <CardContent className="p-5">
                 {/* Progress */}
                 <div className="mb-4">
@@ -432,7 +466,7 @@ export default function JoinBookingDetailPage() {
                       {session.participants_count}/{session.slots_total}
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPercentage}%` }}
@@ -449,7 +483,7 @@ export default function JoinBookingDetailPage() {
                       <Info className="w-4 h-4 text-orange-600" />
                       Deskripsi
                     </h3>
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    <p className="text-sm text-gray-600 mb-4 leading-relaxed whitespace-pre-line">
                       {session.description}
                     </p>
                   </>
@@ -458,31 +492,41 @@ export default function JoinBookingDetailPage() {
                 <Separator className="my-4" />
 
                 {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                   <InfoItem
                     icon={MapPin}
                     label="Lokasi"
-                    value={session.booking?.field?.name}
+                    value={session.booking?.field?.name || "TBA"}
                     colorClass="orange"
                   />
                   <InfoItem
                     icon={Calendar}
                     label="Tanggal"
-                    value={format(
-                      new Date(session?.booking?.booking_date || ""),
-                      "dd MMM yyyy",
-                      { locale: localeId }
-                    )}
+                    value={
+                      session?.booking?.booking_date
+                        ? format(
+                            new Date(session.booking.booking_date),
+                            "dd MMM yyyy",
+                            { locale: localeId }
+                          )
+                        : "-"
+                    }
                     colorClass="blue"
                   />
                   <InfoItem
                     icon={Clock}
                     label="Waktu"
-                    value={`${session.booking?.booked_slots?.[0]} - ${
-                      session.booking?.booked_slots?.[
-                        session.booking.booked_slots.length - 1
-                      ]
-                    }`}
+                    value={
+                      // Pastikan cek session, booking, DAN booked_slots
+                      session?.booking?.booked_slots?.length &&
+                      session.booking.booked_slots.length > 0
+                        ? `${session.booking.booked_slots[0]} - ${
+                            session.booking.booked_slots[
+                              session.booking.booked_slots.length - 1
+                            ]
+                          }`
+                        : "-"
+                    }
                     colorClass="purple"
                   />
                   <InfoItem
@@ -502,7 +546,7 @@ export default function JoinBookingDetailPage() {
                     Host
                   </h3>
                   <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
-                    <Avatar className="w-12 h-12 border-2 border-orange-300">
+                    <Avatar className="w-12 h-12 border-2 border-orange-200">
                       <AvatarImage src={session.host?.image || ""} />
                       <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 text-white font-bold">
                         {session.host?.name?.charAt(0).toUpperCase()}
@@ -514,108 +558,93 @@ export default function JoinBookingDetailPage() {
                           {session.host?.name}
                         </p>
                         {status === "host" && (
-                          <Badge className="bg-orange-500 text-white text-xs flex items-center gap-1">
-                            <Crown className="w-3 h-3" />
+                          <Badge className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 flex items-center gap-1 border-none">
+                            <Crown className="w-2.5 h-2.5" />
                             You
                           </Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
-                        <Mail className="w-3 h-3 text-orange-600" />
+                        <Mail className="w-3 h-3 text-orange-500" />
                         <span className="truncate">{session.host?.email}</span>
                       </div>
-                      {session.host?.phone && (
-                        <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
-                          <Phone className="w-3 h-3 text-orange-600" />
-                          {session.host?.phone}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Payment Instructions */}
-                {session.payment_instructions && (
-                  <>
-                    <Separator className="my-4" />
-                    <div>
-                      <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-orange-600" />
-                        Instruksi Pembayaran
-                      </h3>
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-4">
-                        <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed mb-3">
-                          {session.payment_instructions}
-                        </p>
+                {/* Payment Instructions (Visible only if user is joining/joined) */}
+                {session.payment_instructions &&
+                  status !== "guest" &&
+                  status !== "none" && (
+                    <>
+                      <Separator className="my-4" />
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-orange-600" />
+                          Instruksi Pembayaran
+                        </h3>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed mb-3">
+                            {session.payment_instructions}
+                          </p>
 
-                        <div className="flex flex-wrap gap-2 pt-3 border-t border-blue-200">
-                          {session.payment_instructions.match(/\d{10,}/g) && (
+                          <div className="flex flex-wrap gap-2 pt-3 border-t border-blue-200">
+                            {/* Regex to find potential account numbers */}
+                            {session.payment_instructions.match(/\d{10,}/g) && (
+                              <button
+                                onClick={() => {
+                                  const accountNumber =
+                                    session.payment_instructions.match(
+                                      /\d{10,}/g
+                                    )?.[0];
+                                  if (accountNumber)
+                                    copyToClipboard(
+                                      accountNumber,
+                                      "No. Rekening"
+                                    );
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-medium text-blue-700 hover:bg-blue-100 transition"
+                              >
+                                {copiedText === "No. Rekening" ? (
+                                  <>
+                                    <Check className="w-3 h-3" /> Tersalin!
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3" /> Salin Rekening
+                                  </>
+                                )}
+                              </button>
+                            )}
                             <button
-                              onClick={() => {
-                                const accountNumber =
-                                  session.payment_instructions.match(
-                                    /\d{10,}/g
-                                  )?.[0];
-                                if (accountNumber)
-                                  copyToClipboard(
-                                    accountNumber,
-                                    "No. Rekening"
-                                  );
-                              }}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-medium text-blue-700 hover:bg-blue-50 transition"
+                              onClick={() =>
+                                copyToClipboard(
+                                  session.price_per_slot.toString(),
+                                  "Nominal"
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-medium text-blue-700 hover:bg-blue-100 transition"
                             >
-                              {copiedText === "No. Rekening" ? (
+                              {copiedText === "Nominal" ? (
                                 <>
-                                  <Check className="w-3 h-3" />
-                                  Tersalin!
+                                  <Check className="w-3 h-3" /> Tersalin!
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="w-3 h-3" />
-                                  Salin Rekening
+                                  <Copy className="w-3 h-3" /> Salin Nominal
                                 </>
                               )}
                             </button>
-                          )}
-                          <button
-                            onClick={() =>
-                              copyToClipboard(
-                                session.price_per_slot.toString(),
-                                "Nominal"
-                              )
-                            }
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-medium text-blue-700 hover:bg-blue-50 transition"
-                          >
-                            {copiedText === "Nominal" ? (
-                              <>
-                                <Check className="w-3 h-3" />
-                                Tersalin!
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3" />
-                                Salin Nominal
-                              </>
-                            )}
-                          </button>
-                        </div>
-
-                        <div className="flex gap-2 mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                          <p className="text-xs text-yellow-800">
-                            Pastikan melakukan pembayaran sesuai instruksi dan
-                            konfirmasi ke host setelah transfer.
-                          </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
               </CardContent>
             </Card>
 
             {/* Participants */}
-            <Card className="shadow-lg">
+            <Card className="shadow-sm border-gray-100">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -624,16 +653,16 @@ export default function JoinBookingDetailPage() {
                   </h3>
                 </div>
 
-                {session?.participants?.length || 0 > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                {(session?.participants?.length || 0) > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                     {session?.participants?.map((p: any) => (
                       <div
                         key={p.id}
-                        className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border"
+                        className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100"
                       >
-                        <Avatar className="w-10 h-10">
+                        <Avatar className="w-9 h-9">
                           <AvatarImage src={p.user?.image || ""} />
-                          <AvatarFallback className="bg-gradient-to-br from-orange-400 to-orange-500 text-white text-sm font-bold">
+                          <AvatarFallback className="bg-orange-100 text-orange-600 text-xs font-bold">
                             {p.name?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -643,28 +672,36 @@ export default function JoinBookingDetailPage() {
                               {p.name}
                             </p>
                             {p.is_guest && (
-                              <Badge className="bg-purple-100 text-purple-700 text-xs">
+                              <Badge className="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0 border-none">
                                 Guest
                               </Badge>
                             )}
                             {p.user?.id === user?.id && (
-                              <Badge className="bg-blue-100 text-blue-700 text-xs">
+                              <Badge className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0 border-none">
                                 You
                               </Badge>
                             )}
                           </div>
-                          {p.user?.email && (
-                            <p className="text-xs text-gray-500 truncate">
-                              {p.user.email}
-                            </p>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-[10px] px-1.5 rounded ${
+                                p.status === "approved"
+                                  ? "bg-green-100 text-green-700"
+                                  : p.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {p.status}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                  <div className="text-center py-8">
+                    <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="text-sm text-gray-500">Belum ada peserta</p>
                   </div>
                 )}
@@ -674,18 +711,21 @@ export default function JoinBookingDetailPage() {
 
           {/* Right Column - Sticky */}
           <div className="lg:col-span-1">
-            <div className="sticky top-26 space-y-4">
+            <div className="sticky top-6 space-y-4">
               {/* Price & Join Button */}
-              <Card className="shadow-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white py-0">
+              <Card className="shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none">
                 <CardContent className="p-5">
-                  <div className="text-center mb-4">
+                  <div className="text-center mb-5">
                     <p className="text-xs opacity-90 mb-1">Harga per Slot</p>
                     <p className="text-4xl font-bold">
                       {formatPrice(session.price_per_slot)}
                     </p>
-                    <p className="text-xs opacity-80 mt-1">
-                      Total: {formatPrice(session.booking?.price || 0)}
-                    </p>
+                    {status === "host" && (
+                      <p className="text-xs opacity-80 mt-1">
+                        Total Booking:{" "}
+                        {formatPrice(session.booking?.price || 0)}
+                      </p>
+                    )}
                   </div>
 
                   <JoinButton
@@ -698,17 +738,17 @@ export default function JoinBookingDetailPage() {
               </Card>
 
               {/* Info Tips */}
-              <Card className="shadow-lg bg-blue-50 border-2 border-blue-200 py-0">
+              <Card className="shadow-sm bg-blue-50 border-blue-100">
                 <CardContent className="p-4">
                   <div className="flex gap-3">
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
                     <div className="text-xs text-blue-900">
-                      <p className="font-bold mb-2">Tips</p>
-                      <ul className="space-y-1.5">
-                        <li>• Konfirmasi dengan host</li>
-                        <li>• Bawa perlengkapan sendiri</li>
-                        <li>• Datang tepat waktu</li>
-                        <li>• Patuhi aturan venue</li>
+                      <p className="font-bold mb-2">Tips Mabar</p>
+                      <ul className="space-y-1.5 list-disc pl-4">
+                        <li>Hubungi host jika ada pertanyaan</li>
+                        <li>Bawa perlengkapan sendiri (raket/sepatu)</li>
+                        <li>Datang 10 menit sebelum jadwal</li>
+                        <li>Jaga kebersihan lapangan</li>
                       </ul>
                     </div>
                   </div>
@@ -743,5 +783,21 @@ export default function JoinBookingDetailPage() {
         isUploading={isUploading}
       />
     </div>
+  );
+}
+
+// ==================== MAIN EXPORT ====================
+// ✅ WRAPPED IN SUSPENSE TO PREVENT BUILD ERRORS
+export default function JoinBookingDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+        </div>
+      }
+    >
+      <JoinBookingContent />
+    </Suspense>
   );
 }
