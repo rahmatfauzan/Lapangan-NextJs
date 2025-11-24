@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react"; // 1. Import Suspense
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/axios";
 import { Users, Crown, Loader2, Search, Plus } from "lucide-react";
@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import Pagination from "./components/Pagination";
 import MabarTable from "./MabarTable";
 import EmptyState from "./Empty.state";
+import { UploadPaymentModal } from "./components/UploadPaymentModal"; // 2. Pastikan Import Modal ada
 import useSWR from "swr";
 
 type TabType = "joined" | "created";
@@ -20,10 +21,13 @@ const TABS = [
 
 const ITEMS_PER_PAGE = 10;
 
-export default function MyMabarPage() {
+// 3. Pisahkan Logic ke Content Component
+function MyMabarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "joined";
+
+  // State
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab as TabType);
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -32,6 +36,7 @@ export default function MyMabarPage() {
     null
   );
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch sessions
   const fetcher = (url: string) => api.get(url).then((res) => res.data.data);
@@ -41,7 +46,16 @@ export default function MyMabarPage() {
       ? "/api/user/joined-sessions"
       : "/api/user/mabar-sessions";
 
-  const { data: sessions = [], isLoading } = useSWR(endpoint, fetcher);
+  const { data: sessions = [], isLoading, mutate } = useSWR(endpoint, fetcher);
+
+  // Sync Tab Change to URL (UX Improvement)
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    // Optional: Update URL tanpa refresh halaman agar kalau direfresh tetap di tab yang sama
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -84,6 +98,7 @@ export default function MyMabarPage() {
 
       if (response.data.success) {
         toast.success("Sesi mabar berhasil dihapus");
+        mutate(); // Refresh data
       }
     } catch (error: any) {
       toast.error(
@@ -99,13 +114,41 @@ export default function MyMabarPage() {
     setUploadModalOpen(true);
   };
 
+  // Handler Submit Upload (Logic tambahan agar modal berfungsi)
+  const handleSubmitUpload = async (file: File) => {
+    if (!selectedSessionId) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("payment_proof", file);
+
+    try {
+      await api.post(
+        `api/mabar-sessions/${selectedSessionId}/payment-proof`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      toast.success("Bukti pembayaran berhasil diupload");
+      mutate(); // Refresh data SWR
+      setUploadModalOpen(false);
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Gagal upload bukti pembayaran"
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleContinuePayment = (invoiceNumber: string) => {
-    router.push(`api/booking/continue?invoice=${invoiceNumber}&source=mabar`);
+    router.push(`/booking/continue?invoice=${invoiceNumber}&source=mabar`);
   };
 
   return (
@@ -129,7 +172,7 @@ export default function MyMabarPage() {
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => handleTabChange(tab.key)}
                   className={`relative px-6 py-4 font-semibold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
                     activeTab === tab.key
                       ? "text-blue-600"
@@ -167,7 +210,7 @@ export default function MyMabarPage() {
 
           {activeTab === "created" && (
             <button
-              onClick={() => router.push("/mabar/create")}
+              onClick={() => router.push("/host-mabar/create")}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3.5 rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg whitespace-nowrap"
             >
               <Plus className="w-5 h-5" />
@@ -208,6 +251,29 @@ export default function MyMabarPage() {
           </div>
         )}
       </div>
+
+      {/* 4. Tambahkan Modal Upload Payment di sini */}
+      <UploadPaymentModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onSubmit={handleSubmitUpload}
+        isUploading={isUploading}
+      />
     </div>
+  );
+}
+
+// 5. Wrapper Default Export
+export default function MyMabarPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+        </div>
+      }
+    >
+      <MyMabarContent />
+    </Suspense>
   );
 }
