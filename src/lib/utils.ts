@@ -1,9 +1,9 @@
 import { MabarSession } from "@/types";
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 const formatRupiah = (value: number) => {
@@ -16,42 +16,52 @@ const formatRupiah = (value: number) => {
 };
 
 const getEndTime = (startTime: string, duration: number): string => {
-    if (duration === 0) return startTime;
-    
-    // Pisahkan jam dan menit dari startTime (cth: "12:00")
-    const [startHour, minutes] = startTime.split(":").map(Number);
-    
-    // Hitung total jam selesai
-    const endHours = startHour + duration;
-    
-    // Format kembali ke string HH:MM
-    return `${endHours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+  if (duration === 0) return startTime;
+
+  // Pisahkan jam dan menit dari startTime (cth: "12:00")
+  const [startHour, minutes] = startTime.split(":").map(Number);
+
+  // Hitung total jam selesai
+  const endHours = startHour + duration;
+
+  // Format kembali ke string HH:MM
+  return `${endHours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 };
 
-const getParticipantStatus = (mabar: MabarSession, currentUserId: number | undefined) => {
-    if (!currentUserId) {
-        return { isHost: false, status: 'NOT_LOGGED_IN' }; // Status baru
-    }
-    
-    // 1. Cek apakah dia Host
-    const isHost = mabar.host?.id === currentUserId;
+const getParticipantStatus = (
+  mabar: MabarSession,
+  currentUserId: number | undefined
+) => {
+  if (!currentUserId) {
+    return { isHost: false, status: "NOT_LOGGED_IN" }; // Status baru
+  }
 
-    // 2. Cari Partisipan yang cocok dengan user saat ini
-    const currentUserParticipant = mabar.participants?.find(p => p.user_id === currentUserId);
-    // console.log('mabar.participants', mabar.participants);
+  // 1. Cek apakah dia Host
+  const isHost = mabar.host?.id === currentUserId;
 
-    if (isHost) {
-        // Host selalu terdaftar (statusnya 'approved' atau 'waiting_payment')
-        return { isHost: true, status: currentUserParticipant?.status || 'APPROVED' }; 
-    }
+  // 2. Cari Partisipan yang cocok dengan user saat ini
+  const currentUserParticipant = mabar.participants?.find(
+    (p) => Number(p.id) === currentUserId
+  );
+  // console.log('mabar.participants', mabar.participants);
 
-    if (currentUserParticipant) {
-        // Jika user sudah join, kembalikan status partisipannya
-        return { isHost: false, status: currentUserParticipant.status };
-    }
+  if (isHost) {
+    // Host selalu terdaftar (statusnya 'approved' atau 'waiting_payment')
+    return {
+      isHost: true,
+      status: currentUserParticipant?.status || "APPROVED",
+    };
+  }
 
-    // Default: Belum join
-    return { isHost: false, status: 'NOT_JOINED' };
+  if (currentUserParticipant) {
+    // Jika user sudah join, kembalikan status partisipannya
+    return { isHost: false, status: currentUserParticipant.status };
+  }
+
+  // Default: Belum join
+  return { isHost: false, status: "NOT_JOINED" };
 };
 
 export const formatPrice = (price: number): string => {
