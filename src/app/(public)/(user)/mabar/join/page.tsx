@@ -41,7 +41,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import JoinSessionModal from "./modal.tsx";
-import { UploadPaymentModal } from "../../my-mabar/components/UploadPaymentModal.js";
+import { UploadPaymentModal } from "../../my-mabar/components/UploadPaymentModal";
 
 // ==================== UTILITIES ====================
 
