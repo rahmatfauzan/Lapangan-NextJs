@@ -34,11 +34,11 @@ import {
 } from "./components/MabarCard";
 import { UploadPaymentModal } from "./components/UploadPaymentModal";
 import { CancelConfirmationModal } from "./components/CancelConfirmationModal";
-import { PaymentProofPreviewModal } from "./components/PaymentProofPreviewModal";
 import { uploadPaymentProof } from "@/lib/services/mabar.service";
 import { mutate } from "swr";
 import { toast } from "sonner";
 import { cancelMabarSession } from "@/lib/services/mabar-edit.service";
+import { ProofPreviewModal } from "./components/ProofPreviewModal";
 
 type TabType = "joined" | "created";
 type ViewType = "table" | "card";
@@ -537,7 +537,7 @@ export default function MabarTable({
       )}
 
       {/* Modals */}
-      <PaymentProofPreviewModal
+      <ProofPreviewModal
         isOpen={!!previewImage}
         onClose={() => setPreviewImage(null)}
         imageUrl={previewImage || ""}

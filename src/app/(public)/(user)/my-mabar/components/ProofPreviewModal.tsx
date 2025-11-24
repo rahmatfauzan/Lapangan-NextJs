@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 
 // ✅ Modal untuk melihat bukti pembayaran
-export const PaymentProofPreviewModal = ({
+export const ProofPreviewModal = ({
   isOpen,
   onClose,
   imageUrl,
